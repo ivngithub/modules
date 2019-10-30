@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  project_modules:
+    build: .
+    image: module
+    volumes:
+      - .:/modules
+    tty: true
