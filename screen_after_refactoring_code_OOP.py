@@ -99,7 +99,6 @@ class Polyline:
 class Knot(Polyline):
     def __init__(self, surface, color, step=35):
         super(Knot, self).__init__(surface, color)
-        self.around_points = []
         self.step = step # need changed
 
     def set_step_up(self):
