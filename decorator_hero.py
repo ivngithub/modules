@@ -44,42 +44,172 @@ class Hero(Creature):
 
 
 class AbstractEffect(Creature):
-    def __init__(self, obj):
-        self.obj = obj
+    def __init__(self, base):
+        self.base = base
 
     def get_positive_effects(self):
-        self.obj.get_positive_effects()
+        self.base.get_positive_effects()
 
     def get_negative_effects(self):
-        self.obj.get_negative_effects()
+        self.base.get_negative_effects()
 
     def get_stats(self):
-        self.obj.get_stats()
+        self.base.get_stats()
 
 
-class AbstractPositive(AbstractEffect):
-    pass
+# class AbstractPositive(AbstractEffect):
+#     def get_positive_effects(self):
+#         buff = self.base.get_positive_effects()
+#         buff.append(self.__class__.__name__)
+#         return buff
+#
+#
+# class AbstractNegative(AbstractEffect):
+#     def get_negative_effects(self):
+#         buff = self.base.get_positive_effects()
+#         buff.append(self.__class__.__name__)
+#         return buff
 
 
-class AbstractNegative(AbstractEffect):
-    pass
+"""
+Увеличивает характеристики: Сила, Выносливость, Ловкость, Удача на 7;
+уменьшает характеристики: Восприятие, Харизма, Интеллект на 3;
+количество единиц здоровья увеличивается на 50.
+"""
+class Berserk(AbstractEffect):
+    """
+        "Strength": 15,  # сила
+        "Perception": 4,  # восприятие
+        "Endurance": 8,  # выносливость
+        "Charisma": 2,  # харизма
+        "Intelligence": 3,  # интеллект
+        "Agility": 8,  # ловкость
+        "Luck": 1
+    """
 
+    def get_negative_effects(self):
+        return self.base.get_negative_effects()
 
-class Berserk(AbstractPositive):
-    pass
+    def get_positive_effects(self):
+        buff = self.base.get_positive_effects()
+        buff.append('Berserk')
+        return buff
 
+    def get_stats(self):
+        buff = self.base.get_stats()
+        buff['Strength'] += 7
+        buff['Endurance'] += 7
+        buff['Agility'] += 7
+        buff['Luck'] += 7
 
-class Blessing(AbstractPositive):
-    pass
+        buff['Perception'] -= 3
+        buff['Charisma'] -= 3
+        buff['Intelligence'] -= 3
 
+        buff['HP'] +=50
+        return buff
 
-class Weakness(AbstractNegative):
-    pass
+"""
+увеличивает все основные характеристики на 2.
+"""
+class Blessing(AbstractEffect):
+    def get_negative_effects(self):
+        return self.base.get_negative_effects()
+    def get_positive_effects(self):
+        buff = self.base.get_positive_effects()
+        buff.append('Blessing')
+        return buff
 
+    def get_stats(self):
+        buff = self.base.get_stats()
+        buff['Strength'] += 2
+        buff['Perception'] += 2
+        buff['Endurance'] += 2
+        buff['Charisma'] += 2
+        buff['Intelligence'] += 2
+        buff['Agility'] += 2
+        buff['Luck'] += 2
+        return buff
 
-class Curse(AbstractNegative):
-    pass
+def start():
+    hero = Hero()
+    brs1 = Berserk(hero)
+    print(brs1.get_stats())
+    print(brs1.get_negative_effects())
+    print(brs1.get_positive_effects())
+    brs2 = Berserk(brs1)
+    bls1 = Blessing(brs2)
+    print(bls1.get_stats())
+    print(bls1.get_negative_effects())
+    print(bls1.get_positive_effects())
+    return brs1, brs2, bls1
 
+"""
+уменьшает характеристики: Сила, Выносливость, Ловкость на 4
+"""
+class Weakness(AbstractEffect):
+    """
+        "Strength": 15,  # сила
+        "Perception": 4,  # восприятие
+        "Endurance": 8,  # выносливость
+        "Charisma": 2,  # харизма
+        "Intelligence": 3,  # интеллект
+        "Agility": 8,  # ловкость
+        "Luck": 1
+    """
+    def get_positive_effects(self):
+        return self.base.get_positive_effects()
 
-class EvilEye(AbstractNegative):
-    pass
+    def get_negative_effects(self):
+        buff = self.base.get_positive_effects()
+        buff.append('Weakness')
+        return buff
+
+    def get_stats(self):
+        buff = self.base.get_stats()
+        buff['Strength'] -= 4
+        buff['Endurance'] -= 4
+        buff['Agility'] -= 4
+        return buff
+
+"""
+уменьшает все основные характеристики на 2.
+"""
+class Curse(AbstractEffect):
+
+    def get_positive_effects(self):
+        return self.base.get_positive_effects()
+
+    def get_negative_effects(self):
+        buff = self.base.get_positive_effects()
+        buff.append('Curse')
+        return buff
+
+    def get_stats(self):
+        buff = self.base.get_stats()
+        buff['Strength'] -= 2
+        buff['Perception'] -= 2
+        buff['Endurance'] -= 2
+        buff['Charisma'] -= 2
+        buff['Intelligence'] -= 2
+        buff['Agility'] -= 2
+        buff['Luck'] -= 2
+        return buff
+
+"""
+уменьшает  характеристику Удача на 10.
+"""
+class EvilEye(AbstractEffect):
+
+    def get_positive_effects(self):
+        return self.base.get_positive_effects()
+
+    def get_negative_effects(self):
+        buff = self.base.get_positive_effects()
+        buff.append('EvilEye')
+        return buff
+
+    def get_stats(self):
+        buff = self.base.get_stats()
+        buff['Luck'] -= 10
+        return buff
