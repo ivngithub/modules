@@ -2,7 +2,7 @@ version: '2'
 
 services:
   project_modules:
-    build: .
+    build: ..
     image: module
     volumes:
       - .:/modules
