@@ -1,37 +1,31 @@
-import re
-from regexp import calculate
+from wikistat import parse
 
+correct = {
+    'Stone_Age': [13, 10, 12, 40],
+    'Brain': [19, 5, 25, 11],
+    'Artificial_intelligence': [8, 19, 13, 198],
+    'Python_(programming_language)': [2, 5, 17, 41],
+}
+start = 'Stone_Age'
+end = 'Python_(programming_language)'
+path = './wiki/'
 
-def findall(regexp):
-    text = """
-    a=1
-    a=+1
-    a=-1
-    a=b
-    a=b+100
-    a=b-100
-    
-    b+=10
-    b+=+10
-    b+=-10
-    b+=b
-    b+=b+100
-    b+=b-100
-    
-    c-=101
-    c-=+101
-    c-=-101
-    c-=b
-    c-=b+101
-    c-=b-101
-    """
+count = 0
+max_count = len(correct)
 
-    return re.findall(regexp, text)
+result = parse(start, end, path)
 
-if __name__ == '__main__':
-    result = calculate({'a': 1, 'b': 2, 'c': 3}, findall)
-    correct = {"a": -98, "b": 196, "c": -686}
-    if result == correct:
-        print ("Correct")
-    else:
-        print ("Incorrect: %s != %s" % (result, correct))
+for link, params in result.items():
+    if link not in correct:
+        break
+    if params == correct[link]:
+        count += 1
+    del correct[link]
+
+if count == 0:
+    print("Fail!")
+elif count == max_count:
+    print("Success!")
+else:
+    print("{}% passed".format(count*100//max_count))
+
