@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
+
 import re
 import os
+import pprint
 
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
@@ -8,7 +10,51 @@ def build_tree(start, end, path):
     link_re = re.compile(r"(?<=/wiki/)[\w()]+")  # Искать ссылки можно как угодно, не обязательно через re
     files = dict.fromkeys(os.listdir(path))  # Словарь вида {"filename1": None, "filename2": None, ...}
     # TODO Проставить всем ключам в files правильного родителя в значение, начиная от start
-    return files
+
+    filenames = {file for file in files.keys()}
+
+    for i, file_name in enumerate(files, start=1):
+
+        with open("{}{}".format(path, file_name)) as f:
+            contents = f.read()
+            link_names = set(re.findall(link_re, contents))
+
+            children = filenames.intersection(link_names).difference({file_name})
+            files[file_name] = children
+
+            # print(i, file_name, files[file_name])
+
+    # print('Stone_Age', files['Stone_Age'])
+    # print('*'*10)
+    # print('Brain', files['Brain'])
+    # print('*'*10)
+    # print('Artificial_intelligence', files['Artificial_intelligence'])
+
+    from collections import deque
+
+    def bfs(graph, root, end):
+        distances = {}
+        distances[root] = 0
+        q = deque([root])
+        while q:
+            # The oldest seen (but not yet visited) node will be the left most one.
+            current = q.popleft()
+            for neighbor in graph[current]:
+                print(q)
+                if neighbor == end:
+                    print('good', 'start:', root, 'end:', end)
+                    pprint.pprint(graph[current])
+                    pprint.pprint(distances)
+                    return
+
+                if neighbor not in distances:
+                    distances[neighbor] = distances[current] + 1
+                    # When we see a new node, we add it to the right side of the queue.
+                    q.append(neighbor)
+        return distances
+
+    bfs(files, start, end)
+
 
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
@@ -46,3 +92,20 @@ def parse(start, end, path):
         out[file] = [imgs, headers, linkslen, lists]
 
     return out
+
+
+def debug_fun():
+    link_re = re.compile(r"(?<=/wiki/)[\w()]+")
+    with open('wiki/14th_Chess_Olympiad') as data:
+        soup = BeautifulSoup(data, "lxml")
+        links = soup.find_all('a', href=link_re)
+        s = {link.text for link in links if link.text == 'Agnostic'}
+        l = [link.text for link in links if link.text]
+
+    print(s)
+
+
+if __name__ == '__main__':
+    # debug_fun()
+    r = build_tree('Stone_Age', 'Python_(programming_language)', 'wiki/')
+    # print(r)
