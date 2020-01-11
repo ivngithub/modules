@@ -1,9 +1,49 @@
-from bs4 import BeautifulSoup
-
 import re
 import os
+import json
 import pprint
+from collections import deque
 
+from bs4 import BeautifulSoup
+
+def bfs(graph, root, end):
+    distances = dict()
+    distances[root] = 0
+
+    step = 1
+
+    q = deque([root])
+    print(q)
+    while q:
+        current = q.popleft()
+
+        if end in q:
+            print('good')
+            print(q)
+            print(step)
+            break
+
+        for neighbor in graph[current]:
+        # else: break
+
+            next_neighbor = graph[neighbor]
+            if next_neighbor:
+                q.extend(graph[neighbor])
+            print(q)
+
+        # need for debug
+        with open("distances.json", 'a') as f:
+            def set_default(obj):
+                if isinstance(obj, set):
+                    return list(obj)
+                raise TypeError
+
+
+            f.write('step: {}-{}: {} \n'.format(step, current, graph[current]))
+        step += 1
+
+
+    return distances
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
 def build_tree(start, end, path):
@@ -13,7 +53,7 @@ def build_tree(start, end, path):
 
     filenames = {file for file in files.keys()}
 
-    for i, file_name in enumerate(files, start=1):
+    for file_name in files:
 
         with open("{}{}".format(path, file_name)) as f:
             contents = f.read()
@@ -22,48 +62,31 @@ def build_tree(start, end, path):
             children = filenames.intersection(link_names).difference({file_name})
             files[file_name] = children
 
-            # print(i, file_name, files[file_name])
-
-    # print('Stone_Age', files['Stone_Age'])
-    # print('*'*10)
-    # print('Brain', files['Brain'])
-    # print('*'*10)
-    # print('Artificial_intelligence', files['Artificial_intelligence'])
-
-    from collections import deque
-
-    def bfs(graph, root, end):
-        distances = {}
-        distances[root] = 0
-        q = deque([root])
-        while q:
-            # The oldest seen (but not yet visited) node will be the left most one.
-            current = q.popleft()
-            for neighbor in graph[current]:
-                print(q)
-                if neighbor == end:
-                    print('good', 'start:', root, 'end:', end)
-                    pprint.pprint(graph[current])
-                    pprint.pprint(distances)
-                    return
-
-                if neighbor not in distances:
-                    distances[neighbor] = distances[current] + 1
-                    # When we see a new node, we add it to the right side of the queue.
-                    q.append(neighbor)
-        return distances
-
-    bfs(files, start, end)
-
+    ##need for debug
+    # with open("files.json", 'w') as f:
+    #     def set_default(obj):
+    #         if isinstance(obj, set):
+    #             return list(obj)
+    #         raise TypeError
+    #     print(type(files))
+    #     s = json.dumps(files, indent=4, default=set_default)
+    #     f.write(s)
+    return bfs(files, start, end)
 
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
 def build_bridge(start, end, path):
     files = build_tree(start, end, path)
     bridge = []
-    # TODO Добавить нужные страницы в bridge
-    return bridge
 
+    for file in files:
+        print(file)
+
+    # TODO Добавить нужные страницы в bridge
+
+
+
+    return bridge
 
 def parse(start, end, path):
     """
@@ -93,19 +116,7 @@ def parse(start, end, path):
 
     return out
 
-
-def debug_fun():
-    link_re = re.compile(r"(?<=/wiki/)[\w()]+")
-    with open('wiki/14th_Chess_Olympiad') as data:
-        soup = BeautifulSoup(data, "lxml")
-        links = soup.find_all('a', href=link_re)
-        s = {link.text for link in links if link.text == 'Agnostic'}
-        l = [link.text for link in links if link.text]
-
-    print(s)
-
-
 if __name__ == '__main__':
     # debug_fun()
-    r = build_tree('Stone_Age', 'Python_(programming_language)', 'wiki/')
+    r = build_bridge('Stone_Age', 'Python_(programming_language)', 'wiki/')
     # print(r)
