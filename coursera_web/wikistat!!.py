@@ -1,7 +1,49 @@
-from bs4 import BeautifulSoup
 import re
 import os
+import json
+import pprint
+from collections import deque
 
+from bs4 import BeautifulSoup
+
+def bfs(graph, root, end):
+    distances = dict()
+    distances[root] = 0
+
+    step = 1
+
+    q = deque([root])
+    print(q)
+    while q:
+        current = q.popleft()
+
+        if end in q:
+            print('good')
+            print(q)
+            print(step)
+            break
+
+        for neighbor in graph[current]:
+        # else: break
+
+            next_neighbor = graph[neighbor]
+            if next_neighbor:
+                q.extend(graph[neighbor])
+            print(q)
+
+        # need for debug
+        with open("distances.json", 'a') as f:
+            def set_default(obj):
+                if isinstance(obj, set):
+                    return list(obj)
+                raise TypeError
+
+
+            f.write('step: {}-{}: {} \n'.format(step, current, graph[current]))
+        step += 1
+
+
+    return distances
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
 def build_tree(start, end, path):
@@ -12,6 +54,7 @@ def build_tree(start, end, path):
     filenames = {file for file in files.keys()}
 
     for file_name in files:
+
         with open("{}{}".format(path, file_name)) as f:
             contents = f.read()
             link_names = set(re.findall(link_re, contents))
@@ -19,16 +62,31 @@ def build_tree(start, end, path):
             children = filenames.intersection(link_names).difference({file_name})
             files[file_name] = children
 
-    return files
+    ##need for debug
+    # with open("files.json", 'w') as f:
+    #     def set_default(obj):
+    #         if isinstance(obj, set):
+    #             return list(obj)
+    #         raise TypeError
+    #     print(type(files))
+    #     s = json.dumps(files, indent=4, default=set_default)
+    #     f.write(s)
+    return bfs(files, start, end)
 
 
 # Вспомогательная функция, её наличие не обязательно и не будет проверяться
 def build_bridge(start, end, path):
     files = build_tree(start, end, path)
     bridge = []
-    # TODO Добавить нужные страницы в bridge
-    return bridge
 
+    for file in files:
+        print(file)
+
+    # TODO Добавить нужные страницы в bridge
+
+
+
+    return bridge
 
 def parse(start, end, path):
     """
@@ -58,40 +116,7 @@ def parse(start, end, path):
 
     return out
 
-
 if __name__ == '__main__':
-    print('start ...')
-    r = build_tree('Stone_Age', 'Python_(programming_language)', 'wiki/')
-    print('next ...')
-    # for key, item in r.items():
-    #     print(key, ':', item)
-
-
-    import collections
-
-
-    def bfs(graph, root):
-        visited, queue = set(), collections.deque([root])
-        visited.add(root)
-
-        Point = collections.namedtuple('Point', ['iam', 'parent'])
-        steps = []
-
-        while queue:
-            vertex = queue.popleft()
-            for neighbour in graph[vertex]:
-
-                p = Point(iam=neighbour, parent=vertex)
-                steps.append(p)
-
-                if neighbour not in visited:
-                    visited.add(neighbour)
-                    queue.append(neighbour)
-
-        return steps
-
-    v = bfs(r, 'Stone_Age')
-    end_list = filter(lambda x: x.iam == 'Python_(programming_language)', v)
-
-    for el in end_list:
-        pass
+    # debug_fun()
+    r = build_bridge('Stone_Age', 'Python_(programming_language)', 'wiki/')
+    # print(r)
