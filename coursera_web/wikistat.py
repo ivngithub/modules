@@ -1,13 +1,12 @@
 from bs4 import BeautifulSoup
 import re
 import os
+from collections import deque, namedtuple
 
 
-# Вспомогательная функция, её наличие не обязательно и не будет проверяться
-def build_tree(start, end, path):
-    link_re = re.compile(r"(?<=/wiki/)[\w()]+")  # Искать ссылки можно как угодно, не обязательно через re
-    files = dict.fromkeys(os.listdir(path))  # Словарь вида {"filename1": None, "filename2": None, ...}
-    # TODO Проставить всем ключам в files правильного родителя в значение, начиная от start
+def build_tree(path):
+    link_re = re.compile(r"(?<=/wiki/)[\w()]+")
+    files = dict.fromkeys(os.listdir(path))
 
     filenames = {file for file in files.keys()}
 
@@ -22,12 +21,80 @@ def build_tree(start, end, path):
     return files
 
 
-# Вспомогательная функция, её наличие не обязательно и не будет проверяться
+def bfs(graph, root):
+        visited, queue = set(), deque([[0, root]])
+        visited.add(root)
+
+        # graph_after_bfs = {
+                                # 0: {'graph_field_name': ['wave_members', ]},
+                                # 1: {'graph_field_name1': ['wave_members', ],
+                                #     'graph_field_name2': ['wave_members', ]
+                                #     },
+                           # }
+
+        Point = namedtuple('Point', ['iam', 'parent'])
+        points = [Point(iam=root, parent=root)]
+
+        while queue:
+
+            vertexes = queue.popleft()
+
+            wave_number = vertexes[0]
+            wave_members = [wave_number + 1]
+
+            for wave_member in vertexes[1:]:
+
+                # if wave_number in graph_after_bfs:
+                #     graph_after_bfs[wave_number].update({wave_member: []})
+                # else:
+                #     graph_after_bfs[wave_number] = {wave_member: []}
+
+                for neighbour in graph[wave_member]:
+                    if neighbour not in visited:
+                        visited.add(neighbour)
+                        wave_members.append(neighbour)
+
+                        # graph_after_bfs[wave_number][wave_member].append(neighbour)
+
+                        p = Point(iam=neighbour, parent=wave_member)
+                        points.append(p)
+
+            if len(wave_members) > 1:
+                queue.append(wave_members)
+
+        # # clear
+        # for key in graph_after_bfs:
+        #     for item in set(graph_after_bfs[key]):
+        #         if not bool(graph_after_bfs[key][item]):
+        #             del graph_after_bfs[key][item]
+
+        # return graph_after_bfs
+        return points
+
+
 def build_bridge(start, end, path):
-    files = build_tree(start, end, path)
     bridge = []
-    # TODO Добавить нужные страницы в bridge
-    return bridge
+
+    files = build_tree(path)
+
+    try:
+        points = bfs(files, start)
+
+        end_point = list(filter(lambda x: x.iam == end, points))
+        # print(end_point)
+        bridge.append(end_point[0].iam)
+
+        for el in range(len(points)):
+            if end_point[0].parent == start and end_point[0].iam == start:
+                break
+            end_point = list(filter(lambda x: x.iam == end_point[0].parent, points))
+            bridge.append(end_point[0].iam)
+            # print(end_point)
+
+    except (KeyError, IndexError):
+        return bridge
+
+    return bridge[::-1]
 
 
 def parse(start, end, path):
@@ -61,37 +128,8 @@ def parse(start, end, path):
 
 if __name__ == '__main__':
     print('start ...')
-    r = build_tree('Stone_Age', 'Python_(programming_language)', 'wiki/')
-    print('next ...')
-    # for key, item in r.items():
-    #     print(key, ':', item)
-
-
-    import collections
-
-
-    def bfs(graph, root):
-        visited, queue = set(), collections.deque([root])
-        visited.add(root)
-
-        Point = collections.namedtuple('Point', ['iam', 'parent'])
-        steps = []
-
-        while queue:
-            vertex = queue.popleft()
-            for neighbour in graph[vertex]:
-
-                p = Point(iam=neighbour, parent=vertex)
-                steps.append(p)
-
-                if neighbour not in visited:
-                    visited.add(neighbour)
-                    queue.append(neighbour)
-
-        return steps
-
-    v = bfs(r, 'Stone_Age')
-    end_list = filter(lambda x: x.iam == 'Python_(programming_language)', v)
-
-    for el in end_list:
-        pass
+    print(build_bridge('Stone_Age', 'Python_(programming_language)', 'wiki/'))
+    # r = build_tree('Structural_geology', 'Python_(programming_language)', 'wiki/')
+    print('finish ...')
+    # #TODO
+    # # что если не верный старт или конец
