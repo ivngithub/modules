@@ -116,20 +116,22 @@ def parse(start, end, path):
         body = soup.find(id="bodyContent")
 
         # TODO посчитать реальные значения
-        imgs = 5  # Количество картинок (img) с шириной (width) не меньше 200
-        headers = 10  # Количество заголовков, первая буква текста внутри которого: E, T или C
-        linkslen = 15  # Длина максимальной последовательности ссылок, между которыми нет других тегов
-        lists = 20  # Количество списков, не вложенных в другие списки
+        imgs = len(list(filter(lambda img: img.attrs.get("width") and
+                                           int(img.attrs.get("width")) >= 200, body.findAll("img"))))  # Количество картинок (img) с шириной (width) не меньше 200
 
-        out[file] = [imgs, headers, linkslen, lists]
+        headers = len(body.findAll(re.compile(r"[hH]\d")))  # Количество заголовков, первая буква текста внутри которого: E, T или C
+        linkslen = body.findAll("a")  # TODO 16042020 Длина максимальной последовательности ссылок, между которыми нет других тегов
+
+        lists = len(body.findAll("ul"))  # Количество списков, не вложенных в другие списки
+
+        out[file] = [imgs, headers, [(item, link) for item, link in enumerate(linkslen)], lists]
 
     return out
 
 
 if __name__ == '__main__':
     print('start ...')
-    print(build_bridge('Stone_Age', 'Python_(programming_language)', 'wiki/'))
+    # print(build_bridge('Stone_Age', 'Python_(programming_language)', 'wiki/'))
+    print(parse('Stone_Age', 'Python_(programming_language)', 'wiki/'))
     # r = build_tree('Structural_geology', 'Python_(programming_language)', 'wiki/')
     print('finish ...')
-    # #TODO
-    # # что если не верный старт или конец
